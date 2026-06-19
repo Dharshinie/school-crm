@@ -1,0 +1,6 @@
+{
+  "name": "EDUCRM School Suite",
+  "description": "A comprehensive cloud school CRM suite enabling secure admin, teacher, and parent portal evaluations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

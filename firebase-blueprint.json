@@ -1,0 +1,209 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user account with specific roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "parent"] },
+        "house": { "type": "string", "enum": ["Red", "Blue", "Gold", "None"] },
+        "studentName": { "type": "string", "description": "Applicable for parents, name of their child" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "email", "role", "createdAt"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Student record tracked by teachers and admins.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "house": { "type": "string", "enum": ["Red", "Blue", "Gold"] },
+        "class": { "type": "string" },
+        "rollNo": { "type": "string" },
+        "guardianEmail": { "type": "string", "format": "email" },
+        "meritPoints": { "type": "number" },
+        "attendancePercentage": { "type": "number" },
+        "academicGrades": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "house", "class", "rollNo", "guardianEmail", "meritPoints", "attendancePercentage"]
+    },
+    "BadgeLog": {
+      "title": "BadgeLog",
+      "description": "Digital achievements and medals awarded to students.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "badgeTitle": { "type": "string" },
+        "badgeIcon": { "type": "string" },
+        "description": { "type": "string" },
+        "awardedBy": { "type": "string", "description": "Teacher name" },
+        "awardedById": { "type": "string" },
+        "awardedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "studentId", "studentName", "badgeTitle", "badgeIcon", "awardedBy", "awardedById", "awardedAt"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "Homework and assignment details assigned by teachers.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "subject": { "type": "string" },
+        "class": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdById": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "subject", "class", "dueDate", "createdById", "createdAt"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "Student homework assignments dropped into the virtual dropbox.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "assignmentId": { "type": "string" },
+        "assignmentTitle": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "content": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "grade": { "type": "string" },
+        "feedback": { "type": "string" },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "assignmentId", "studentId", "studentName", "content", "submittedAt"]
+    },
+    "Communication": {
+      "title": "Communication",
+      "description": "Logs Parent-Teacher Messaging context and announcements.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderRole": { "type": "string" },
+        "recipientEmail": { "type": "string" },
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "message": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "senderId", "senderName", "senderRole", "recipientEmail", "message", "createdAt"]
+    },
+    "Gallery": {
+      "title": "Gallery",
+      "description": "Visual feed showing photos or illustrations of school events.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "caption": { "type": "string" },
+        "postedBy": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "imageUrl", "caption", "postedBy", "createdAt"]
+    },
+    "LostAndFound": {
+      "title": "LostAndFound",
+      "description": "Items published on the school's digital lost & found board.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "location": { "type": "string" },
+        "contact": { "type": "string" },
+        "status": { "type": "string", "enum": ["lost", "found", "claimed"] },
+        "imageUrl": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "description", "status", "createdAt"]
+    },
+    "BlogPost": {
+      "title": "BlogPost",
+      "description": "Articles published on the School Magazine or Student Blog.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "studentAuthor": { "type": "string", "description": "Student author name to be displayed below the post" },
+        "teacherPoster": { "type": "string", "description": "Teacher who curated and published it" },
+        "teacherId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "content", "studentAuthor", "teacherPoster", "createdAt"]
+    },
+    "PermissionSlip": {
+      "title": "PermissionSlip",
+      "description": "Digital consent forms for parents to sign.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "signatures": { 
+          "type": "object", 
+          "description": "Map of parent email to signature details { signed: boolean, signedAt: string, parentName: string }" 
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "description", "dueDate", "signatures", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Application user role metadata"
+    },
+    "students": {
+      "schema": "Student",
+      "description": "The central registration list of students, scores, and house points"
+    },
+    "badgelogs": {
+      "schema": "BadgeLog",
+      "description": "Award records of active achievements"
+    },
+    "assignments": {
+      "schema": "Assignment",
+      "description": "Virtual homework descriptions and deadlines"
+    },
+    "submissions": {
+      "schema": "Submission",
+      "description": "Assignment content uploads sent by parents or students"
+    },
+    "communications": {
+      "schema": "Communication",
+      "description": "Inbox records of messaging exchanged"
+    },
+    "gallery": {
+      "schema": "Gallery",
+      "description": "School events media grid posts"
+    },
+    "lostandfound": {
+      "schema": "LostAndFound",
+      "description": "School objects lost or found postings"
+    },
+    "blogposts": {
+      "schema": "BlogPost",
+      "description": "Clipped magazine articles authored by students"
+    },
+    "permissionslips": {
+      "schema": "PermissionSlip",
+      "description": "Field trips and event consent signups"
+    }
+  }
+}

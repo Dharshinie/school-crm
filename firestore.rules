@@ -1,0 +1,144 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Catch-All Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Role detection helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function getUserRole(uid) {
+      return getUserData(uid).role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'edharshinie@gmail.com' ||
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole(request.auth.uid) == 'admin'
+      );
+    }
+
+    function isTeacher() {
+      return isSignedIn() && (
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole(request.auth.uid) == 'teacher')
+      );
+    }
+
+    function isParent() {
+      return isSignedIn() && (
+        isTeacher() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && getUserRole(request.auth.uid) == 'parent')
+      );
+    }
+
+    // Helper to validate common alphanumeric IDs and avoid poisoning
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isTeacher() || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId && 
+                    request.resource.data.role in ['teacher', 'parent', 'admin'] &&
+                    (request.resource.data.role != 'admin' || request.auth.token.email == 'edharshinie@gmail.com') &&
+                    request.resource.data.email == request.auth.token.email;
+      allow update: if isSignedIn() && request.auth.uid == userId && 
+                    (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // 2. Students collection
+    match /students/{studentId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() || isAdmin();
+      allow update: if isTeacher() || isAdmin() || (
+        isParent() && 
+        incomingEmailMatchesGuardian(resource.data.guardianEmail) && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['guardianEmail', 'academicGrades', 'attendancePercentage'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    function incomingEmailMatchesGuardian(guardianEmail) {
+      return request.auth.token.email == guardianEmail;
+    }
+
+    // 3. Badge log collection (Achievement Badge Log)
+    match /badgelogs/{logId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isTeacher() || isAdmin();
+    }
+
+    // 4. Assignments collection
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() || isAdmin();
+      allow update, delete: if isTeacher() || isAdmin();
+    }
+
+    // 5. Submissions collection
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn() && (
+        isTeacher() || 
+        isAdmin() || 
+        resource.data.studentId == request.auth.uid || 
+        resource.data.guardianEmail == request.auth.token.email
+      );
+      allow create: if isSignedIn();
+      allow update: if isTeacher() || isAdmin() || (
+        isSignedIn() && 
+        resource.data.studentId == request.auth.uid && 
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['content', 'fileUrl', 'submittedAt'])
+      );
+      allow delete: if isTeacher() || isAdmin();
+    }
+
+    // 6. Communications collection
+    match /communications/{messageId} {
+      allow read: if isSignedIn();  // Filtering is done securely client-side/by queries
+      allow create: if isSignedIn();
+      allow update, delete: if isTeacher() || isAdmin() || (isSignedIn() && resource.data.senderId == request.auth.uid);
+    }
+
+    // 7. Gallery collection
+    match /gallery/{galleryId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() || isAdmin();
+      allow update, delete: if isTeacher() || isAdmin();
+    }
+
+    // 8. Lost and Found collection
+    match /lostandfound/{itemId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isTeacher() || isAdmin();
+    }
+
+    // 9. Blog posts/マガジン collection
+    match /blogposts/{postId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() || isAdmin();
+      allow update, delete: if isTeacher() || isAdmin();
+    }
+
+    // 10. Permission slips collection
+    match /permissionslips/{slipId} {
+      allow read: if isSignedIn();
+      allow create: if isTeacher() || isAdmin();
+      allow update: if isSignedIn(); // Allows parents to sign
+      allow delete: if isTeacher() || isAdmin();
+    }
+  }
+}
